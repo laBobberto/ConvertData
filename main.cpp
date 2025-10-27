@@ -524,7 +524,7 @@ int main(int argc, char* argv[]) {
     auto result_orig = benchmarkFunction("Original", convertGregorianDateToWeekDate_Original, testData, config);
     auto result_v1 = benchmarkFunction("V1_EarlyReturn", convertGregorianDateToWeekDate_V1, testData, config);
     auto result_v2 = benchmarkFunction("V2_BitOps_", convertGregorianDateToWeekDate_V2, testData, config);
-    auto result_v4 = benchmarkFunction("V4_Precalculation", convertGregorianDateToWeekDate_V4, testData, config);
+    auto result_v3 = benchmarkFunction("V3_Precalculation", convertGregorianDateToWeekDate_V4, testData, config);
 
     std::cout << "\n=== РЕЗУЛЬТАТЫ ПРОИЗВОДИТЕЛЬНОСТИ ===" << std::endl;
     std::cout << std::fixed << std::setprecision(2);
@@ -556,7 +556,7 @@ int main(int argc, char* argv[]) {
     printResult(result_orig, result_orig.srednee_vremya_ns);
     printResult(result_v1, result_orig.srednee_vremya_ns);
     printResult(result_v2, result_orig.srednee_vremya_ns);
-    printResult(result_v4, result_orig.srednee_vremya_ns);
+    printResult(result_v3, result_orig.srednee_vremya_ns);
 
     std::cout << "\nЗапись результатов в benchmark_analysis.csv..." << std::endl;
     std::ofstream csv("benchmark_analysis.csv");
@@ -585,7 +585,7 @@ int main(int argc, char* argv[]) {
     writeCSV(result_orig, result_orig.srednee_vremya_ns);
     writeCSV(result_v1, result_orig.srednee_vremya_ns);
     writeCSV(result_v2, result_orig.srednee_vremya_ns);
-    writeCSV(result_v4, result_orig.srednee_vremya_ns);
+    writeCSV(result_v3, result_orig.srednee_vremya_ns);
 
     csv.close();
 
