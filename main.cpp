@@ -23,8 +23,15 @@
 // НАСТРОЙКИ ТЕСТИРОВАНИЯ
 // ============================================================================
 struct BenchmarkConfig {
+#ifdef __linux__
     size_t razmer_testovyh_dannyh = 50000000;           // Количество тестовых случаев
-    size_t kolichestvo_iteracij = 1000000000;           // Количество итераций
+    size_t kolichestvo_iteracij = 1000000000;
+#endif
+#ifdef _WIN32
+    size_t razmer_testovyh_dannyh = 1000000;
+    size_t kolichestvo_iteracij = 1000000;
+#endif
+
     int minimalnyj_god = 1800;                          // Минимальный год
     int maksimalnyj_god = 3000;                         // Максимальный год
     bool vklyuchat_granichnye_sluchai = true;           // Включить граничные случаи
@@ -69,7 +76,7 @@ struct MemoryStats {
 
 
 // ============================================================================
-// ФУНКЦИЯ ВЫСОКОСНОГО ГОДА (я вынес отдельно)
+// ФУНКЦИЯ ВЫСОКОСНОГО ГОДА (я вынес отдельно, а то не особо читается, когда оно в строчном формате)
 // ============================================================================
 // inline int isLeapYear(int year) noexcept
 // {
@@ -299,7 +306,7 @@ std::vector<TestCase> generateTestData(const BenchmarkConfig& config) {
         }
 
         for (int year = config.minimalnyj_god; year <= config.maksimalnyj_god; year += 4) {
-            // ВСТРОЕНО: isLeapYear(year)
+            // isLeapYear(year)
             if ((!(year & 3) && ((year % 100) || !(year % 400)))) {
                 TestCase tc;
                 std::memset(&tc.struktura_vremeni, 0, sizeof(struct tm));
@@ -375,6 +382,39 @@ BenchmarkResult<Func> benchmarkFunction(
     std::vector<double> times;
     times.reserve(config.kolichestvo_iteracij);
 
+
+#ifdef _WIN32
+    // ===============================================================
+    // ВЕРСИЯ ДЛЯ WINDOWS (Батчинг из-за нне особо точного таймера)
+    // ===============================================================
+    const int BATCH_SIZE = 1000;
+    size_t testDataIndex = 0;
+
+    for (size_t i = 0; i < config.kolichestvo_iteracij; ++i) {
+
+        auto start = std::chrono::high_resolution_clock::now();
+
+        for(int j = 0; j < BATCH_SIZE; ++j) {
+            const auto& testCase = testData[testDataIndex];
+            volatile int week = func(testCase.struktura_vremeni);
+            (void)week;
+
+            testDataIndex++;
+            if (testDataIndex >= testData.size()) {
+                testDataIndex = 0;
+            }
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+
+        double elapsed_ns = std::chrono::duration<double, std::nano>(end - start).count() / BATCH_SIZE;
+        times.push_back(elapsed_ns);
+    }
+
+#else
+    // ===============================================================
+    // ВЕРСИЯ ДЛЯ LINUX
+    // ===============================================================
     for (size_t i = 0; i < config.kolichestvo_iteracij; ++i) {
         const auto& testCase = testData[i % testData.size()];
 
@@ -386,6 +426,7 @@ BenchmarkResult<Func> benchmarkFunction(
         times.push_back(elapsed_ns);
         (void)week;
     }
+#endif
 
     // Захватываем память (после)
     if (config.otslezhivat_pamyat) {
@@ -433,6 +474,9 @@ BenchmarkResult<Func> benchmarkFunction(
 }
 
 int main(int argc, char* argv[]) {
+#ifdef _WIN32
+    SetConsoleOutputCP(65001);
+#endif
     BenchmarkConfig config;
 
     for (int i = 1; i < argc; i++) {
@@ -452,10 +496,10 @@ int main(int argc, char* argv[]) {
         } else if (arg == "--help") {
             std::cout << "Использование: " << argv[0] << " [options]\n"
                       << "Опции:\n"
-                      << "  --test-size N       Количество тестовых случаев (default: 100000)\n"
-                      << "  --iterations N      Количество итераций (default: 10000000)\n"
+                      << "  --test-size N       Количество тестовых случаев (default: " << config.razmer_testovyh_dannyh << ")\n"
+                      << "  --iterations N      Количество итераций (default: " << config.kolichestvo_iteracij << ")\n"
                       << "  --year-min YEAR     Минимальный год (default: 1800)\n"
-                      << "  --year-max YEAR     Максимальный год (default: 2200)\n"
+                      << "  --year-max YEAR     Максимальный год (default: 3000)\n"
                       << "  --no-edge-cases     Отключить граничные случаи\n"
                       << "  --quiet             Минимальный вывод\n"
                       << "  --help              Показать справку\n";
