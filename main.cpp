@@ -210,7 +210,7 @@ int convertGregorianDateToWeekDate_V2(const struct tm& times) noexcept
 // ============================================================================
 // Разделение вычислений
 // ============================================================================
-int convertGregorianDateToWeekDate_V4(const struct tm& times) noexcept
+int convertGregorianDateToWeekDate_V3(const struct tm& times) noexcept
 {
     const int y = times.tm_year + 1900;
     const int dayOfYear = times.tm_yday + 1;
@@ -524,7 +524,7 @@ int main(int argc, char* argv[]) {
     auto result_orig = benchmarkFunction("Original", convertGregorianDateToWeekDate_Original, testData, config);
     auto result_v1 = benchmarkFunction("V1_EarlyReturn", convertGregorianDateToWeekDate_V1, testData, config);
     auto result_v2 = benchmarkFunction("V2_BitOps_", convertGregorianDateToWeekDate_V2, testData, config);
-    auto result_v3 = benchmarkFunction("V3_Precalculation", convertGregorianDateToWeekDate_V4, testData, config);
+    auto result_v3 = benchmarkFunction("V3_Precalculation", convertGregorianDateToWeekDate_V3, testData, config);
 
     std::cout << "\n=== РЕЗУЛЬТАТЫ ПРОИЗВОДИТЕЛЬНОСТИ ===" << std::endl;
     std::cout << std::fixed << std::setprecision(2);
