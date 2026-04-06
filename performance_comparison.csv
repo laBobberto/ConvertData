@@ -1,0 +1,25 @@
+Source,Version,Average_ns,Speedup
+Clang (Linux),Original,56.11,1.00x
+Clang (Linux),V1_EarlyReturn,56.08,1.00x
+Clang (Linux),V2_BitOps,44.79,1.25x
+Clang (Linux),V3_Precalculation,44.92,1.25x
+G++ (Linux),Original,58.86,1.00x
+G++ (Linux),V1_EarlyReturn,39.58,1.49x
+G++ (Linux),V2_BitOps,36.25,1.62x
+G++ (Linux),V3_Precalculation,41.39,1.42x
+"MinGW (Win, per-call)",Original,33.35,1.00x
+"MinGW (Win, per-call)",V1_EarlyReturn,34.83,0.96x
+"MinGW (Win, per-call)",V2_BitOps,30.67,1.09x
+"MinGW (Win, per-call)",V3_Precalculation,32.07,1.04x
+"MSVC (Win, per-call)",Original,37.66,1.00x
+"MSVC (Win, per-call)",V1_EarlyReturn,31.89,1.18x
+"MSVC (Win, per-call)",V2_BitOps,29.49,1.28x
+"MSVC (Win, per-call)",V3_Precalculation,29.79,1.26x
+"MinGW (Win, batch)",Original,12.34,1.00x
+"MinGW (Win, batch)",V1_EarlyReturn,17.50,0.71x
+"MinGW (Win, batch)",V2_BitOps,12.17,1.01x
+"MinGW (Win, batch)",V3_Precalculation,13.67,0.90x
+"MSVC (Win, batch)",Original,19.89,1.00x
+"MSVC (Win, batch)",V1_EarlyReturn,14.25,1.40x
+"MSVC (Win, batch)",V2_BitOps,14.39,1.38x
+"MSVC (Win, batch)",V3_Precalculation,15.52,1.28x

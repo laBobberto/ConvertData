@@ -1,0 +1,25 @@
+Source,Version,Average_ns,Median_ns,P95_ns,P99_ns,Speedup
+Clang (Linux),Original,56.1056,49.0,71.0,112.0,1.0
+Clang (Linux),V1_EarlyReturn,56.0836,51.0,71.0,92.0,1.0003922715374907
+Clang (Linux),V2_BitOps,44.7856,41.0,56.0,73.0,1.252759815655032
+Clang (Linux),V3_Precalculation,44.9212,40.0,58.0,109.0,1.2489782107334622
+G++ (Linux),Original,58.8639,57.0,78.0,98.0,1.0
+G++ (Linux),V1_EarlyReturn,39.5844,36.0,51.0,68.0,1.487047927971625
+G++ (Linux),V2_BitOps,36.2545,33.0,47.0,64.0,1.6236301700478561
+G++ (Linux),V3_Precalculation,41.3935,37.0,61.0,105.0,1.422056603089857
+"MinGW (Win, per-call)",Original,33.353,0.0,100.0,200.0,1.0
+"MinGW (Win, per-call)",V1_EarlyReturn,34.8334,0.0,100.0,100.0,0.9575005598075411
+"MinGW (Win, per-call)",V2_BitOps,30.6655,0.0,100.0,100.0,1.0876392036653568
+"MinGW (Win, per-call)",V3_Precalculation,32.0737,0.0,100.0,100.0,1.0398862619529397
+"MSVC (Win, per-call)",Original,37.6632,0.0,100.0,100.0,1.0
+"MSVC (Win, per-call)",V1_EarlyReturn,31.8907,0.0,100.0,100.0,1.1810088834675943
+"MSVC (Win, per-call)",V2_BitOps,29.4886,0.0,100.0,100.0,1.2772122108204527
+"MSVC (Win, per-call)",V3_Precalculation,29.7945,0.0,100.0,100.0,1.2640990786890198
+"MinGW (Win, batch)",Original,12.3417,11.9,15.6,22.4,1.0
+"MinGW (Win, batch)",V1_EarlyReturn,17.5042,17.1,20.9,30.1,0.705070783012077
+"MinGW (Win, batch)",V2_BitOps,12.1706,11.5,16.0,27.1,1.0140584687690006
+"MinGW (Win, batch)",V3_Precalculation,13.6653,13.3,16.4,20.5,0.9031415336655616
+"MSVC (Win, batch)",Original,19.885,19.0,25.1,32.5,1.0
+"MSVC (Win, batch)",V1_EarlyReturn,14.2531,13.4,19.3,26.9,1.395135093418274
+"MSVC (Win, batch)",V2_BitOps,14.3915,13.5,20.3,28.3,1.3817183754299414
+"MSVC (Win, batch)",V3_Precalculation,15.5185,14.9,19.7,27.9,1.2813738441215325

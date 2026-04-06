@@ -1,5 +1,8 @@
+import csv
+import os
 import pandas as pd
-import altair as alt
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 file_map = {
     'clang_linux_benchmark_analysis.csv': 'Clang (Linux)',
@@ -10,90 +13,103 @@ file_map = {
     'time_msvc_win_benchmark_analysis.csv': 'MSVC (Win, batch)'
 }
 
-data_frames = []
+metrics = ['Average_ns', 'Median_ns', 'P95_ns', 'P99_ns']
+all_results = []
 
 for filename, source_name in file_map.items():
+    if not os.path.exists(filename):
+        continue
+        
     try:
-        df = pd.read_csv(filename)
-        df['Источник'] = source_name
-        data_frames.append(df)
+        with open(filename, mode='r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            source_data = list(reader)
+            
+            baseline = None
+            for row in source_data:
+                version = row['Version'].strip('_')
+                if version == 'Original':
+                    baseline = float(row['Average_ns'])
+                    break
+            
+            if baseline is None:
+                continue
+                
+            for row in source_data:
+                version = row['Version'].strip('_')
+                avg_ns = float(row['Average_ns'])
+                median_ns = float(row['Median_ns'])
+                p95_ns = float(row['P95_ns'])
+                p99_ns = float(row['P99_ns'])
+                speedup = baseline / avg_ns if avg_ns > 0 else 0
+                
+                all_results.append({
+                    'Source': source_name,
+                    'Version': version,
+                    'Average_ns': avg_ns,
+                    'Median_ns': median_ns,
+                    'P95_ns': p95_ns,
+                    'P99_ns': p99_ns,
+                    'Speedup': speedup
+                })
     except Exception as e:
-        print(f"Не удалось загрузить файл {filename}: {e}")
+        print(f"Error processing {filename}: {e}")
 
-if not data_frames:
-    print("Данные не загружены. Невозможно построить графики.")
-else:
-    all_data = pd.concat(data_frames, ignore_index=True)
+if not all_results:
+    print("No results to process.")
+    exit()
 
-    version_sort_order = [
-        'Original',
-        'V1_EarlyReturn',
-        'V2_BitOps_',
-        'V4_Precalculation'
-    ]
+df = pd.DataFrame(all_results)
+df.to_csv('performance_comparison_detailed.csv', index=False)
 
-    base = alt.Chart(all_data).encode(
-        x=alt.X('Источник', axis=None),
+# Main Summary Plot (Average & Speedup)
+sns.set_theme(style="whitegrid", context="talk")
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 12))
 
-        column=alt.Column(
-            'Версия',
-            sort=version_sort_order,
-            header=alt.Header(titleOrient="bottom", labelOrient="bottom", title='Версия бенчмарка')
-        ),
+sns.barplot(data=df, x='Source', y='Average_ns', hue='Version', ax=ax1)
+ax1.set_title('Average Execution Time (ns) - Lower is Better')
+ax1.set_ylabel('Time (ns)')
+ax1.set_xlabel('')
+ax1.tick_params(axis='x', rotation=15)
+ax1.legend(title='Version', bbox_to_anchor=(1.05, 1), loc='upper left')
 
-        color=alt.Color('Источник', title='Компилятор (ОС)'),
+sns.barplot(data=df, x='Source', y='Speedup', hue='Version', ax=ax2)
+ax2.set_title('Speedup vs Original (Average) - Higher is Better')
+ax2.set_ylabel('Speedup (x)')
+ax2.set_xlabel('Compiler / Platform')
+ax2.tick_params(axis='x', rotation=15)
+ax2.axhline(1, ls='--', color='red', alpha=0.5)
+ax2.legend(title='Version', bbox_to_anchor=(1.05, 1), loc='upper left')
 
-        tooltip=['Версия', 'Источник', 'Среднее_нс', 'Медиана_нс', 'Пиковый_RSS_КБ', 'P95_нс', 'P99_нс']
+plt.tight_layout()
+plt.savefig('benchmark_summary_charts.png')
 
-    ).properties(
-        width=120
-    ).interactive()
+# Detailed Plot (Tail Latencies)
+fig_det, (ax3, ax4) = plt.subplots(2, 1, figsize=(14, 12))
 
-    chart_avg = base.mark_bar().encode(
-        y=alt.Y('Среднее_нс', title='Среднее время (нс)')
-    ).properties(
-        title='Среднее время выполнения (нс)'
-    )
+df_melted_tail = df.melt(id_vars=['Source', 'Version'], value_vars=['P95_ns', 'P99_ns'], var_name='Metric', value_name='Time_ns')
+sns.barplot(data=df_melted_tail, x='Source', y='Time_ns', hue='Version', ax=ax3)
+ax3.set_title('Tail Latency (P95 & P99) - Lower is Better')
+ax3.set_ylabel('Time (ns)')
+ax3.set_xlabel('')
+ax3.tick_params(axis='x', rotation=15)
+ax3.legend(title='Version', bbox_to_anchor=(1.05, 1), loc='upper left')
 
-    chart_median = base.mark_bar().encode(
-        y=alt.Y('Медиана_нс', title='Медианное время (нс)')
-    ).properties(
-        title='Медианное время выполнения (нс)'
-    )
+# Speedup Heatmap (Version vs Source)
+pivot_speedup = df.pivot(index='Version', columns='Source', values='Speedup')
+sns.heatmap(pivot_speedup, annot=True, fmt=".2f", cmap="YlGnBu", ax=ax4)
+ax4.set_title('Speedup Relative to Original (Heatmap)')
 
-    chart_p95 = base.mark_bar().encode(
-        y=alt.Y('P95_нс', title='P95 Время (нс)')
-    ).properties(
-        title='95-й перцентиль (нс)'
-    )
+plt.tight_layout()
+plt.savefig('benchmark_summary_charts_detailed.png')
 
-    chart_p99 = base.mark_bar().encode(
-        y=alt.Y('P99_нс', title='P99 Время (нс)')
-    ).properties(
-        title='99-й перцентиль (нс)'
-    )
+print("\n=== SUMMARY ANALYSIS ===")
+for source in df['Source'].unique():
+    source_df = df[df['Source'] == source]
+    best_row = source_df.loc[source_df['Speedup'].idxmax()]
+    print(f"{source:<25}: Best is {best_row['Version']} ({best_row['Speedup']:.2f}x speedup)")
 
-    chart_rss = base.mark_bar().encode(
-        y=alt.Y('Пиковый_RSS_КБ', title='Пиковый RSS (КБ)')
-    ).properties(
-        title='Пиковое использование ОЗУ (КБ)'
-    )
-
-    final_chart = alt.vconcat(
-        chart_avg,
-        chart_median,
-        chart_p95,
-        chart_p99,
-        chart_rss
-    ).properties(
-        title='Сводный анализ производительности C++ бенчмарков'
-    ).resolve_scale(
-        y='independent'
-    )
-
-    # final_chart_path = 'benchmark_summary_charts.json'
-    # final_chart.save(final_chart_path)
-    final_chart_path = 'benchmark_summary_charts.png'
-    final_chart.save(final_chart_path)
-
-    print(f"Все графики сохранены в {final_chart_path}")
+print("\nCharts updated:")
+print("- benchmark_summary_charts.png: Average Time and Speedup")
+print("- benchmark_summary_charts_detailed.png: Tail Latencies and Speedup Heatmap")
+print("- performance_comparison_detailed.csv: Raw data table")
